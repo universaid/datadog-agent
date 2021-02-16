@@ -37,8 +37,6 @@ var CheckCmd = &cobra.Command{
 	SilenceUsage: true,
 }
 
-const loggerName ddconfig.LoggerName = "PROCESS"
-
 func runCheckCmd(cmd *cobra.Command, args []string) error {
 	// We need to load in the system probe environment variables before we load the config, otherwise an
 	// "Unknown environment variable" warning will show up whenever valid system probe environment variables are defined.

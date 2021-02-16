@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-package main
+package app
 
 import (
 	"bytes"
@@ -116,7 +116,7 @@ func TestInfo(t *testing.T) {
 	assert.Equal(expectedInfo, info)
 }
 
-func TestNotRunning(t *testing.T) {
+func TestInfoNotRunning(t *testing.T) {
 	reset := setAgentVersionForTest("0.99.0")
 	defer reset()
 
@@ -145,7 +145,7 @@ func TestNotRunning(t *testing.T) {
 	assert.Equal(notRunningInfo, info)
 }
 
-func TestError(t *testing.T) {
+func TestInfoError(t *testing.T) {
 	reset := setAgentVersionForTest("0.99.0")
 	defer reset()
 
