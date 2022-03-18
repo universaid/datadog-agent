@@ -70,8 +70,8 @@ func (s *State) DirectorTargetsVersion() uint64 {
 
 // State returns the state of the uptane client
 func (c *Client) State() (State, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	s := State{
 		ConfigState:     map[string]MetaState{},
 		ConfigUserState: map[string]MetaState{},

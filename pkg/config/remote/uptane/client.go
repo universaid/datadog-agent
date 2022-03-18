@@ -21,7 +21,7 @@ import (
 
 // Client is an uptane client
 type Client struct {
-	sync.Mutex
+	mutex sync.RWMutex
 
 	orgID int64
 
@@ -69,8 +69,8 @@ func NewClient(cacheDB *bbolt.DB, cacheKey string, orgID int64, userConfigEnable
 
 // Update updates the uptane client
 func (c *Client) Update(response *pbgo.LatestConfigsResponse) error {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	err := c.updateRepos(response)
 	if err != nil {
 		return err
@@ -84,15 +84,15 @@ func (c *Client) Update(response *pbgo.LatestConfigsResponse) error {
 
 // TargetsCustom returns the current targets custom of this uptane client
 func (c *Client) TargetsCustom() ([]byte, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return c.director.localStore.GetMetaCustom(metaTargets)
 }
 
 // DirectorRoot returns a director root
 func (c *Client) DirectorRoot(version uint64) ([]byte, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	err := c.verify()
 	if err != nil {
 		return nil, err
@@ -117,8 +117,8 @@ func (c *Client) unsafeTargets() (data.TargetFiles, error) {
 
 // Targets returns the current targets of this uptane client
 func (c *Client) Targets() (data.TargetFiles, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return c.unsafeTargets()
 }
 
@@ -141,15 +141,15 @@ func (c *Client) unsafeTargetFile(path string) ([]byte, error) {
 
 // TargetFile returns the content of a target if the repository is in a verified state
 func (c *Client) TargetFile(path string) ([]byte, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return c.unsafeTargetFile(path)
 }
 
 // TargetsMeta returns the current raw targets.json meta of this uptane client
 func (c *Client) TargetsMeta() ([]byte, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	err := c.verify()
 	if err != nil {
 		return nil, err

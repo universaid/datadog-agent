@@ -42,7 +42,7 @@ const (
 // Service defines the remote config management service responsible for fetching, storing
 // and dispatching the configurations
 type Service struct {
-	sync.Mutex
+	mutex       sync.RWMutex
 	firstUpdate bool
 
 	defaultRefreshInterval time.Duration
@@ -191,8 +191,8 @@ func (s *Service) calculateRefreshInterval() time.Duration {
 }
 
 func (s *Service) refresh() error {
-	s.Lock()
-	defer s.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	activeClients := s.clients.activeClients()
 	s.refreshProducts(activeClients)
 	previousState, err := s.uptane.State()
@@ -255,8 +255,8 @@ func (s *Service) getClientState() ([]byte, error) {
 
 // ClientGetConfigs is the polling API called by tracers and agents to get the latest configurations
 func (s *Service) ClientGetConfigs(request *pbgo.ClientGetConfigsRequest) (*pbgo.ClientGetConfigsResponse, error) {
-	s.Lock()
-	defer s.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	s.clients.seen(request.Client)
 	state, err := s.uptane.State()
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 
 // Client is a remote-configuration client to obtain configurations from the local API
 type Client struct {
-	m               sync.Mutex
+	mutex           sync.Mutex
 	ctx             context.Context
 	close           func()
 	facts           Facts
@@ -118,8 +118,8 @@ func (c *Client) products() []data.Product {
 }
 
 func (c *Client) poll() error {
-	c.m.Lock()
-	defer c.m.Unlock()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	state := c.partialClient.State()
 	lastPollErr := ""
 	if c.lastPollErr != nil {

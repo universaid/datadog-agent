@@ -53,7 +53,7 @@ type PartialState struct {
 
 // PartialClient is a partial uptane client
 type PartialClient struct {
-	sync.Mutex
+	mutex sync.RWMutex
 
 	rootClient  *client.Client
 	localStore  client.LocalStore
@@ -139,8 +139,8 @@ func (c *PartialClient) validateAndUpdateTargets(rawTargets []byte) error {
 
 // State returns the state of the partial client
 func (c *PartialClient) State() PartialState {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return PartialState{
 		RootVersion:    c.rootVersion,
 		TargetsVersion: c.targetsVersion,
@@ -149,8 +149,8 @@ func (c *PartialClient) State() PartialState {
 
 // Update updates the partial client
 func (c *PartialClient) Update(response *pbgo.ClientGetConfigsResponse) error {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	c.valid = false
 	c.remoteStore.roots = response.Roots
 	err := c.rootClient.UpdateRoots()
@@ -199,8 +199,8 @@ func (c *PartialClient) updateRootVersion() error {
 
 // Targets returns the current targets of this uptane partial client
 func (c *PartialClient) Targets() (data.TargetFiles, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	if !c.valid {
 		return nil, fmt.Errorf("partial client local repository is not in a valid state")
 	}
@@ -209,8 +209,8 @@ func (c *PartialClient) Targets() (data.TargetFiles, error) {
 
 // TargetFile returns the content of a target
 func (c *PartialClient) TargetFile(path string) ([]byte, error) {
-	c.Lock()
-	defer c.Unlock()
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	if !c.valid {
 		return nil, fmt.Errorf("partial client local repository is not in a valid state")
 	}
