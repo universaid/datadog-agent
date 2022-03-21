@@ -118,8 +118,6 @@ func (c *Client) products() []data.Product {
 }
 
 func (c *Client) poll() error {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	state := c.partialClient.State()
 	lastPollErr := ""
 	if c.lastPollErr != nil {
@@ -143,6 +141,8 @@ func (c *Client) poll() error {
 	if err != nil {
 		return err
 	}
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	err = c.partialClient.Update(response)
 	if err != nil {
 		return err
