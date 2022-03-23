@@ -39,7 +39,7 @@ func StartFlowRoutine(flowType common.FlowType, hostname string, port uint16, fl
 
 	switch flowType {
 	case common.TypeNetFlow9, common.TypeIPFIX:
-		flowState = &utils.StateNFLegacy{
+		flowState = &utils.StateNetFlow{
 			Format: formatDriver,
 			Logger: logger,
 		}
