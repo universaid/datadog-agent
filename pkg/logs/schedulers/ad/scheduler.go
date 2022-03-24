@@ -6,6 +6,7 @@
 package ad
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -15,8 +16,10 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/autodiscovery/providers/names"
 	logsConfig "github.com/DataDog/datadog-agent/pkg/logs/config"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/adlistener"
+	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/containersorpods"
 	"github.com/DataDog/datadog-agent/pkg/logs/schedulers"
 	"github.com/DataDog/datadog-agent/pkg/logs/service"
+	"github.com/DataDog/datadog-agent/pkg/util"
 	ddUtil "github.com/DataDog/datadog-agent/pkg/util"
 	"github.com/DataDog/datadog-agent/pkg/util/containers"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
@@ -30,14 +33,25 @@ type Scheduler struct {
 	mgr                schedulers.SourceManager
 	listener           *adlistener.ADListener
 	sourcesByServiceID map[string]*logsConfig.LogSource
+
+	// logWhat is used to determine some of the LogSource details
+	logWhat containersorpods.LogWhat
+
+	// cop is the containersorpods chooser used to determine logWhat.
+	cop containersorpods.Chooser
+
+	// cancelStart cancels the startup of this component
+	cancelStart context.CancelFunc
 }
 
 var _ schedulers.Scheduler = &Scheduler{}
 
 // New creates a new scheduler.
-func New() schedulers.Scheduler {
+func New(cop containersorpods.Chooser) schedulers.Scheduler {
 	sch := &Scheduler{
 		sourcesByServiceID: make(map[string]*logsConfig.LogSource),
+		logWhat:            containersorpods.LogUnknown,
+		cop:                cop,
 	}
 	sch.listener = adlistener.NewADListener("logs-agent AD scheduler", sch.Schedule, sch.Unschedule)
 	return sch
@@ -46,11 +60,33 @@ func New() schedulers.Scheduler {
 // Start implements schedulers.Scheduler#Start.
 func (s *Scheduler) Start(sourceMgr schedulers.SourceManager) {
 	s.mgr = sourceMgr
-	s.listener.StartListener()
+
+	if util.CcaInAD() {
+		// if using bare configs, we need to know LogWhat in order to decide some
+		// particulars of the logs sources, so we must wait for ContainersOrPods
+		// TODO: but do we????
+		ctx, cancel := context.WithCancel(context.Background())
+		s.cancelStart = cancel
+		go func() {
+			s.logWhat = s.cop.Wait(ctx)
+			if s.logWhat == containersorpods.LogUnknown {
+				// context was cancelled; do nothing
+				return
+			}
+			s.listener.StartListener()
+		}()
+	} else {
+		s.listener.StartListener()
+	}
 }
 
 // Stop implements schedulers.Scheduler#Stop.
 func (s *Scheduler) Stop() {
+	if util.CcaInAD() {
+		if s.cancelStart != nil {
+			s.cancelStart()
+		}
+	}
 	s.listener.StopListener()
 	s.mgr = nil
 }

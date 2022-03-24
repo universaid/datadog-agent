@@ -22,6 +22,7 @@ import (
 
 	"github.com/DataDog/datadog-agent/pkg/logs/config"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/metrics"
+	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/containersorpods"
 	"github.com/DataDog/datadog-agent/pkg/logs/service"
 
 	"github.com/DataDog/datadog-agent/pkg/util/testutil"
@@ -81,7 +82,8 @@ func createAgent(endpoints *config.Endpoints) (*Agent, *config.LogSources, *serv
 	services := service.NewServices()
 
 	// setup and start the agent
-	agent = NewAgent(sources, services, nil, endpoints)
+	cop := containersorpods.NewDecidedChooser(containersorpods.LogContainers)
+	agent = NewAgent(sources, services, nil, endpoints, cop)
 	return agent, sources, services
 }
 

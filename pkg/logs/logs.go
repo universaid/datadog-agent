@@ -14,6 +14,7 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/logs/client/http"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/metrics"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/adlistener"
+	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/containersorpods"
 	"github.com/DataDog/datadog-agent/pkg/metadata/inventories"
 	"go.uber.org/atomic"
 
@@ -116,22 +117,24 @@ func start(getAC func() *autodiscovery.AutoConfig, serverless bool) (*Agent, err
 		status.AddGlobalWarning(invalidProcessingRules, multiLineWarning)
 	}
 
+	cop := containersorpods.NewChooser()
+
 	// setup and start the logs agent
 	if !serverless {
 		// regular logs agent
 		log.Info("Starting logs-agent...")
-		agent = NewAgent(sources, services, processingRules, endpoints)
+		agent = NewAgent(sources, services, processingRules, endpoints, cop)
 	} else {
 		// serverless logs agent
 		log.Info("Starting a serverless logs-agent...")
-		agent = NewServerless(sources, services, processingRules, endpoints)
+		agent = NewServerless(sources, services, processingRules, endpoints, cop)
 	}
 
 	agent.Start()
 	isRunning.Store(true)
 	log.Info("logs-agent started")
 
-	agent.AddScheduler(adScheduler.New())
+	agent.AddScheduler(adScheduler.New(cop))
 	if !ddUtil.CcaInAD() {
 		agent.AddScheduler(ccaScheduler.New(getAC))
 	}

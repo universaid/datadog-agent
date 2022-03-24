@@ -11,13 +11,15 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/autodiscovery/integration"
 	"github.com/DataDog/datadog-agent/pkg/autodiscovery/providers/names"
 	"github.com/DataDog/datadog-agent/pkg/logs/config"
+	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/containersorpods"
 	"github.com/DataDog/datadog-agent/pkg/logs/schedulers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func setup() (scheduler *Scheduler, spy *schedulers.MockSourceManager) {
-	scheduler = New().(*Scheduler)
+	cop := containersorpods.NewDecidedChooser(containersorpods.LogContainers)
+	scheduler = New(cop).(*Scheduler)
 	spy = &schedulers.MockSourceManager{}
 	scheduler.mgr = spy
 	return scheduler, spy

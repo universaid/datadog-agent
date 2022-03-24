@@ -52,7 +52,7 @@ type Agent struct {
 }
 
 // NewAgent returns a new Logs Agent
-func NewAgent(sources *config.LogSources, services *service.Services, processingRules []*config.ProcessingRule, endpoints *config.Endpoints) *Agent {
+func NewAgent(sources *config.LogSources, services *service.Services, processingRules []*config.ProcessingRule, endpoints *config.Endpoints, cop containersorpods.Chooser) *Agent {
 	health := health.RegisterLiveness("logs-agent")
 
 	// setup the auditor
@@ -65,8 +65,6 @@ func NewAgent(sources *config.LogSources, services *service.Services, processing
 
 	// setup the pipeline provider that provides pairs of processor and sender
 	pipelineProvider := pipeline.NewProvider(config.NumberOfPipelines, auditor, diagnosticMessageReceiver, processingRules, endpoints, destinationsCtx)
-
-	cop := containersorpods.NewChooser()
 
 	// setup the launchers
 	lnchrs := launchers.NewLaunchers(sources, pipelineProvider, auditor)
@@ -110,7 +108,7 @@ func NewAgent(sources *config.LogSources, services *service.Services, processing
 // NewServerless returns a Logs Agent instance to run in a serverless environment.
 // The Serverless Logs Agent has only one input being the channel to receive the logs to process.
 // It is using a NullAuditor because we've nothing to do after having sent the logs to the intake.
-func NewServerless(sources *config.LogSources, services *service.Services, processingRules []*config.ProcessingRule, endpoints *config.Endpoints) *Agent {
+func NewServerless(sources *config.LogSources, services *service.Services, processingRules []*config.ProcessingRule, endpoints *config.Endpoints, cop containersorpods.Chooser) *Agent {
 	health := health.RegisterLiveness("logs-agent")
 
 	diagnosticMessageReceiver := diagnostic.NewBufferedMessageReceiver()
