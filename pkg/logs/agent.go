@@ -86,11 +86,13 @@ func NewAgent(sources *config.LogSources, services *service.Services, processing
 		cop,
 		coreConfig.Datadog.GetBool("logs_config.docker_container_use_file"),
 		coreConfig.Datadog.GetBool("logs_config.docker_container_force_use_file")))
-	lnchrs.AddLauncher(kubernetes.NewLauncher(
-		sources,
-		services,
-		cop,
-		coreConfig.Datadog.GetBool("logs_config.container_collect_all")))
+	if !util.CcaInAD() {
+		lnchrs.AddLauncher(kubernetes.NewLauncher(
+			sources,
+			services,
+			cop,
+			coreConfig.Datadog.GetBool("logs_config.container_collect_all")))
+	}
 
 	return &Agent{
 		sources:                   sources,
