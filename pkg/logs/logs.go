@@ -27,6 +27,7 @@ import (
 	trapsScheduler "github.com/DataDog/datadog-agent/pkg/logs/schedulers/traps"
 	"github.com/DataDog/datadog-agent/pkg/logs/service"
 	"github.com/DataDog/datadog-agent/pkg/logs/status"
+	ddUtil "github.com/DataDog/datadog-agent/pkg/util"
 )
 
 const (
@@ -131,7 +132,9 @@ func start(getAC func() *autodiscovery.AutoConfig, serverless bool) (*Agent, err
 	log.Info("logs-agent started")
 
 	agent.AddScheduler(adScheduler.New())
-	agent.AddScheduler(ccaScheduler.New(getAC))
+	if !ddUtil.CcaInAD() {
+		agent.AddScheduler(ccaScheduler.New(getAC))
+	}
 	agent.AddScheduler(trapsScheduler.New())
 
 	return agent, nil
