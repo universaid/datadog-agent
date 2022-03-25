@@ -334,7 +334,7 @@ func (m *Module) Reload() error {
 	monitor.ReportRuleSetLoaded(ruleSetLoadedReport)
 
 	if m.config.SelfTestEnabled {
-		m.selfTester.RunSelfTest()
+		m.selfTester.RunSelfTest(m)
 	}
 
 	return nil
