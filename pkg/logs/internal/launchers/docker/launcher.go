@@ -178,18 +178,38 @@ func (l *Launcher) run(sourceProvider launchers.SourceProvider, pipelineProvider
 			// detected a new source that has been created either from a configuration file,
 			// a docker label or a pod annotation.
 			l.activeSources = append(l.activeSources, source)
-			pendingContainers := make(map[string]*Container)
-			for _, container := range l.pendingContainers {
-				if container.IsMatch(source) {
-					// found a container matching the new source, start a new tailer
-					l.startTailer(container, source)
-				} else {
-					// keep the container in cache until
-					pendingContainers[container.service.Identifier] = container
+			if util.CcaInAD() {
+				// if using bare configs, then there are no services to reconcile against; just
+				// start the tailer right now.
+				// detected a new container running on the host,
+				dockerutil, err := dockerutilpkg.GetDockerUtil()
+				if err != nil {
+					log.Warnf("Could not use docker client, logs for container %s won’t be collected: %v", source.Config.Identifier, err)
+					continue
 				}
+				dockerContainer, err := dockerutil.Inspect(context.TODO(), source.Config.Identifier, false)
+				if err != nil {
+					log.Warnf("Could not find container with id: %v", err)
+					continue
+				}
+				// make up a fake service for now
+				svc := service.NewService("docker", source.Config.Identifier)
+				container := NewContainer(dockerContainer, svc)
+				l.startTailer(container, source)
+			} else {
+				pendingContainers := make(map[string]*Container)
+				for _, container := range l.pendingContainers {
+					if container.IsMatch(source) {
+						// found a container matching the new source, start a new tailer
+						l.startTailer(container, source)
+					} else {
+						// keep the container in cache until
+						pendingContainers[container.service.Identifier] = container
+					}
+				}
+				// keep the containers that have not found any source yet for next iterations
+				l.pendingContainers = pendingContainers
 			}
-			// keep the containers that have not found any source yet for next iterations
-			l.pendingContainers = pendingContainers
 		case source := <-removedSources:
 			for i, src := range l.activeSources {
 				if src == source {
