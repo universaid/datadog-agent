@@ -7,6 +7,7 @@ package eval
 
 import (
 	"fmt"
+	"net"
 )
 
 // Field name
@@ -22,6 +23,8 @@ const (
 	RegexpValueType   FieldValueType = 1 << 2
 	BitmaskValueType  FieldValueType = 1 << 3
 	VariableValueType FieldValueType = 1 << 4
+	IPValueType       FieldValueType = 1 << 5
+	CIDRValueType     FieldValueType = 1 << 6
 )
 
 // FieldValue describes a field value with its type
@@ -30,6 +33,7 @@ type FieldValue struct {
 	Type  FieldValueType
 
 	StringMatcher StringMatcher
+	IPMatcher     IPMatcher
 }
 
 // Compile the regular expression or the pattern
@@ -47,7 +51,37 @@ func (f *FieldValue) Compile() error {
 		}
 
 		f.StringMatcher = matcher
+	case IPValueType, CIDRValueType:
+		value, ok := f.Value.(string)
+		if !ok {
+			return fmt.Errorf("invalid IP `%v`", f.Value)
+		}
+
+		matcher, err := NewIPMatcher(f.Type, value)
+		if err != nil {
+			return err
+		}
+
+		f.IPMatcher = matcher
 	}
 
 	return nil
+}
+
+// NewIPFieldValue returns a new FieldValue pointer initiailised with the provided IP
+func NewIPFieldValue(ip net.IP, net *net.IPNet) *FieldValue {
+	if net != nil {
+		return &FieldValue{
+			Type: CIDRValueType,
+			IPMatcher: &CIDRMatcher{
+				net: net,
+			},
+		}
+	}
+	return &FieldValue{
+		Type: IPValueType,
+		IPMatcher: &SingleIPMatcher{
+			ip: ip,
+		},
+	}
 }
