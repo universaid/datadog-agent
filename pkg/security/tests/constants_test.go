@@ -11,11 +11,12 @@ package tests
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/DataDog/datadog-agent/pkg/security/ebpf/kernel"
 	"github.com/DataDog/datadog-agent/pkg/security/probe"
 	"github.com/DataDog/datadog-agent/pkg/security/probe/constantfetch"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/rules"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFallbackConstants(t *testing.T) {
