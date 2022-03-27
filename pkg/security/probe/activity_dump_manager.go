@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/DataDog/datadog-agent/pkg/security/api"
+	"github.com/DataDog/datadog-agent/pkg/security/config"
 	seclog "github.com/DataDog/datadog-agent/pkg/security/log"
 	"github.com/DataDog/datadog-agent/pkg/security/metrics"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/model"
@@ -35,17 +36,14 @@ func getCgroupDumpTimeout(p *Probe) uint64 {
 // ActivityDumpManager is used to manage ActivityDumps
 type ActivityDumpManager struct {
 	sync.RWMutex
-	cleanupPeriod        time.Duration
-	tagsResolutionPeriod time.Duration
-	probe                *Probe
-	tracedPIDsMap        *ebpf.Map
-	tracedCommsMap       *ebpf.Map
-	tracedEventTypesMap  *ebpf.Map
-	tracedCgroupsMap     *ebpf.Map
-	cgroupWaitListMap    *ebpf.Map
-	tracedEventTypes     []model.EventType
-	statsdClient         *statsd.Client
-	outputDirectory      string
+	probe               *Probe
+	tracedPIDsMap       *ebpf.Map
+	tracedCommsMap      *ebpf.Map
+	tracedEventTypesMap *ebpf.Map
+	tracedCgroupsMap    *ebpf.Map
+	cgroupWaitListMap   *ebpf.Map
+	statsdClient        *statsd.Client
+	config              *config.Config
 
 	activeDumps   []*ActivityDump
 	snapshotQueue chan *ActivityDump
@@ -58,10 +56,10 @@ func (adm *ActivityDumpManager) Start(ctx context.Context, wg *sync.WaitGroup) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	ticker := time.NewTicker(adm.cleanupPeriod)
+	ticker := time.NewTicker(adm.config.ActivityDumpCleanupPeriod)
 	defer ticker.Stop()
 
-	tagsTicker := time.NewTicker(adm.tagsResolutionPeriod)
+	tagsTicker := time.NewTicker(adm.config.ActivityDumpTagsResolutionPeriod)
 	defer tagsTicker.Stop()
 
 	for {
@@ -153,18 +151,15 @@ func NewActivityDumpManager(p *Probe, client *statsd.Client) (*ActivityDumpManag
 	}
 
 	return &ActivityDumpManager{
-		probe:                p,
-		statsdClient:         client,
-		tracedPIDsMap:        tracedPIDs,
-		tracedCommsMap:       tracedComms,
-		tracedEventTypesMap:  tracedEventTypesMap,
-		tracedCgroupsMap:     tracedCgroupsMap,
-		tracedEventTypes:     p.config.ActivityDumpTracedEventTypes,
-		cgroupWaitListMap:    cgroupWaitList,
-		cleanupPeriod:        p.config.ActivityDumpCleanupPeriod,
-		tagsResolutionPeriod: p.config.ActivityDumpTagsResolutionPeriod,
-		snapshotQueue:        make(chan *ActivityDump, 100),
-		outputDirectory:      p.config.ActivityDumpCgroupOutputDirectory,
+		probe:               p,
+		statsdClient:        client,
+		tracedPIDsMap:       tracedPIDs,
+		tracedCommsMap:      tracedComms,
+		tracedEventTypesMap: tracedEventTypesMap,
+		tracedCgroupsMap:    tracedCgroupsMap,
+		cgroupWaitListMap:   cgroupWaitList,
+		snapshotQueue:       make(chan *ActivityDump, 100),
+		config:              p.config,
 	}, nil
 }
 
@@ -239,9 +234,9 @@ func (adm *ActivityDumpManager) HandleCgroupTracingEvent(event *model.CgroupTrac
 	newDump, err := NewActivityDump(adm, func(ad *ActivityDump) {
 		ad.ContainerID = event.ContainerContext.ID
 		ad.Timeout = adm.probe.resolvers.TimeResolver.ResolveMonotonicTimestamp(event.TimeoutRaw).Sub(time.Now())
-		ad.DifferentiateArgs = true
-		ad.WithGraph = true
-		ad.OutputDirectory = adm.outputDirectory
+		ad.DifferentiateArgs = adm.config.ActivityDumpCgroupDifferentiateGraphs
+		ad.WithGraph = adm.config.ActivityDumpCgroupGenerateGraph
+		ad.OutputDirectory = adm.config.ActivityDumpCgroupOutputDirectory
 		ad.OutputFormat = MSGP
 	})
 	if err != nil {
