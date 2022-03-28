@@ -652,7 +652,7 @@ func (ad *ActivityDump) ToSecurityActivityDumpMessage() *api.SecurityActivityDum
 		DifferentiateArgs: ad.DifferentiateArgs,
 		Timeout:           ad.Timeout.String(),
 		Start:             ad.Start.String(),
-		Left:              ad.Start.Add(ad.Timeout).Sub(time.Now()).String(),
+		Left:              time.Until(ad.Start.Add(ad.Timeout)).String(),
 	}
 }
 
