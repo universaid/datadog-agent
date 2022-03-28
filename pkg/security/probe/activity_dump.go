@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1042,6 +1043,11 @@ func combineChildren(children map[string]*FileActivityNode) map[string]*FileActi
 	for _, a := range inputs[1:] {
 		next := make([]inner, 0)
 		for _, b := range current {
+			if !areCompatibleFans(a.fan, b.fan) {
+				next = append(next, a, b)
+				continue
+			}
+
 			sp, similar := utils.BuildGlob(a.pair, b.pair, 4)
 			if similar {
 				next = append(next, inner{
@@ -1063,6 +1069,10 @@ func combineChildren(children map[string]*FileActivityNode) map[string]*FileActi
 	}
 
 	return res
+}
+
+func areCompatibleFans(a *FileActivityNode, b *FileActivityNode) bool {
+	return reflect.DeepEqual(a.Open, b.Open)
 }
 
 // nolint: unused
