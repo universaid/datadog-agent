@@ -141,7 +141,7 @@ func (m *Module) Start() error {
 
 	// launch the self tests and send the result report
 	if m.config.SelfTestEnabled {
-		err := m.selfTester.RunSelfTest(m)
+		err := m.RunSelfTestAndReport()
 		if err != nil {
 			return err
 		}
@@ -561,4 +561,14 @@ func NewModule(cfg *sconfig.Config, opts ...Opts) (module.Module, error) {
 	sapi.RegisterSecurityModuleServer(m.grpcServer, m.apiServer)
 
 	return m, nil
+}
+
+// RunSelfTestAndReport runs the self tests, and send a result report
+func (m *Module) RunSelfTestAndReport() error {
+	success, fails, err := m.selfTester.RunSelfTest()
+
+	// send the report
+	monitor := m.probe.GetMonitor()
+	monitor.ReportSelfTest(success, fails)
+	return err
 }
