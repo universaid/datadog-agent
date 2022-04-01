@@ -31,6 +31,16 @@ type Policy struct {
 	Macros  []*MacroDefinition `yaml:"macros"`
 }
 
+// RuleFilter definition of a rule filter
+type RuleFilter interface {
+	IsAccepted(rule *RuleDefinition) bool
+}
+
+// PolicyLoadingOpts options used during the loading
+type PolicyLoadingOpts struct {
+	RuleFilters []RuleFilter
+}
+
 var ruleIDPattern = regexp.MustCompile(`^[a-zA-Z0-9_]*$`)
 
 func checkRuleID(ruleID string) bool {
@@ -94,7 +104,7 @@ func LoadPolicy(r io.Reader, name string) (*Policy, error) {
 }
 
 // LoadPolicies loads the policies listed in the configuration and apply them to the given ruleset
-func LoadPolicies(policiesDir string, ruleSet *RuleSet) *multierror.Error {
+func LoadPolicies(policiesDir string, ruleSet *RuleSet, opts PolicyLoadingOpts) *multierror.Error {
 	var (
 		result     *multierror.Error
 		allRules   []*RuleDefinition
@@ -166,7 +176,14 @@ func LoadPolicies(policiesDir string, ruleSet *RuleSet) *multierror.Error {
 
 		// aggregates them as we may need to have all the macro before compiling
 		if len(rules) > 0 {
+		LOOP:
 			for _, rule := range rules {
+				for _, filter := range opts.RuleFilters {
+					if !filter.IsAccepted(rule) {
+						continue LOOP
+					}
+				}
+
 				if existingRule := ruleIndex[rule.ID]; existingRule != nil {
 					if err := existingRule.MergeWith(rule); err != nil {
 						result = multierror.Append(result, err)

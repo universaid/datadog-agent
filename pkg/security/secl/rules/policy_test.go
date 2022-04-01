@@ -79,7 +79,7 @@ func TestMacroMerge(t *testing.T) {
 		},
 	})
 
-	if err := LoadPolicies(tmpDir, rs); err != nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err != nil {
 		t.Error(err)
 	}
 
@@ -94,7 +94,7 @@ func TestMacroMerge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := LoadPolicies(tmpDir, rs); err == nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err == nil {
 		t.Error("expected macro ID conflict")
 	}
 }
@@ -138,7 +138,7 @@ func TestRuleMerge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := LoadPolicies(tmpDir, rs); err != nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err != nil {
 		t.Error(err)
 	}
 
@@ -153,7 +153,7 @@ func TestRuleMerge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := LoadPolicies(tmpDir, rs); err == nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err == nil {
 		t.Error("expected rule ID conflict")
 	}
 }
@@ -307,7 +307,7 @@ func TestActionSetVariable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := LoadPolicies(tmpDir, rs); err != nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err != nil {
 		t.Error(err)
 	}
 
@@ -389,7 +389,7 @@ func TestActionSetVariableConflict(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := LoadPolicies(tmpDir, rs); err == nil {
+	if err := LoadPolicies(tmpDir, rs, PolicyLoadingOpts{}); err == nil {
 		t.Error("expected policy to fail to load")
 	} else {
 		t.Log(err)
@@ -416,7 +416,7 @@ func loadPolicy(t *testing.T, testPolicy *Policy) *multierror.Error {
 		t.Fatal(err)
 	}
 
-	return LoadPolicies(tmpDir, rs)
+	return LoadPolicies(tmpDir, rs, PolicyLoadingOpts{})
 }
 
 func TestActionSetVariableInvalid(t *testing.T) {

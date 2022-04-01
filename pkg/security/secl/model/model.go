@@ -34,6 +34,13 @@ func (m *Model) NewEvent() eval.Event {
 	return &Event{}
 }
 
+// NewEventWithType returns a new Event for the given type
+func (m *Model) NewEventWithType(kind EventType) eval.Event {
+	return &Event{
+		Type: uint64(kind),
+	}
+}
+
 // ValidateField validates the value of a field
 func (m *Model) ValidateField(field eval.Field, fieldValue eval.FieldValue) error {
 	// check that all path are absolute
@@ -128,9 +135,9 @@ type ContainerContext struct {
 //msgp:ignore Event
 // genaccessors
 type Event struct {
-	ID           string    `field:"-"`
+	ID           string    `field:"-" json:"-"`
 	Type         uint64    `field:"-"`
-	TimestampRaw uint64    `field:"-"`
+	TimestampRaw uint64    `field:"-" json:"-"`
 	Timestamp    time.Time `field:"timestamp"` // Timestamp of the event
 
 	ProcessContext   ProcessContext   `field:"process" event:"*"`
@@ -166,14 +173,14 @@ type Event struct {
 	UnloadModule UnloadModuleEvent `field:"unload_module" event:"unload_module"` // [7.35] [Kernel] A kernel module was deleted
 	DNS          DNSEvent          `field:"dns" event:"dns"`                     // [7.36] [Network] A DNS request was sent
 
-	Mount            MountEvent            `field:"-"`
-	Umount           UmountEvent           `field:"-"`
-	InvalidateDentry InvalidateDentryEvent `field:"-"`
-	ArgsEnvs         ArgsEnvsEvent         `field:"-"`
-	MountReleased    MountReleasedEvent    `field:"-"`
-	CgroupTracing    CgroupTracingEvent    `field:"-"`
-	NetDevice        NetDeviceEvent        `field:"-"`
-	VethPair         VethPairEvent         `field:"-"`
+	Mount            MountEvent            `field:"-" json:"-"`
+	Umount           UmountEvent           `field:"-" json:"-"`
+	InvalidateDentry InvalidateDentryEvent `field:"-" json:"-"`
+	ArgsEnvs         ArgsEnvsEvent         `field:"-" json:"-"`
+	MountReleased    MountReleasedEvent    `field:"-" json:"-"`
+	CgroupTracing    CgroupTracingEvent    `field:"-" json:"-"`
+	NetDevice        NetDeviceEvent        `field:"-" json:"-"`
+	VethPair         VethPairEvent         `field:"-" json:"-"`
 }
 
 // GetType returns the event type
@@ -281,9 +288,9 @@ type Process struct {
 	Comm    string `field:"comm" msg:"comm"`    // Comm attribute of the process
 
 	// pid_cache_t
-	ForkTime time.Time `field:"-" msg:"fork_time"`
-	ExitTime time.Time `field:"-" msg:"exit_time"`
-	ExecTime time.Time `field:"-" msg:"exec_time"`
+	ForkTime time.Time `field:"-" msg:"fork_time" json:"-"`
+	ExitTime time.Time `field:"-" msg:"exit_time" json:"-"`
+	ExecTime time.Time `field:"-" msg:"exec_time" json:"-"`
 
 	CreatedAt uint64 `field:"created_at,ResolveProcessCreatedAt" msg:"created_at"` // Timestamp of the creation of the process
 
@@ -293,11 +300,11 @@ type Process struct {
 	// credentials_t section of pid_cache_t
 	Credentials `msg:"credentials"`
 
-	ArgsID uint32 `field:"-" msg:"-"`
-	EnvsID uint32 `field:"-" msg:"-"`
+	ArgsID uint32 `field:"-" msg:"-" json:"-"`
+	EnvsID uint32 `field:"-" msg:"-" json:"-"`
 
-	ArgsEntry *ArgsEntry `field:"-" msg:"args"`
-	EnvsEntry *EnvsEntry `field:"-" msg:"envs"`
+	ArgsEntry *ArgsEntry `field:"-" msg:"args" json:"-"`
+	EnvsEntry *EnvsEntry `field:"-" msg:"envs" json:"-"`
 
 	// defined to generate accessors, ArgsTruncated and EnvsTruncated are used during by unmarshaller
 	Argv0         string   `field:"argv0,ResolveProcessArgv0:100" msg:"-"`                                                                                                                                     // First argument of the process
@@ -317,8 +324,8 @@ type Process struct {
 
 // SpanContext describes a span context
 type SpanContext struct {
-	SpanID  uint64 `field:"_" msg:"span_id"`
-	TraceID uint64 `field:"_" msg:"trace_id"`
+	SpanID  uint64 `field:"_" msg:"span_id" json:"-"`
+	TraceID uint64 `field:"_" msg:"trace_id" json:"-"`
 }
 
 // ExecEvent represents a exec event
@@ -341,9 +348,9 @@ type FileFields struct {
 	Inode        uint64 `field:"inode" msg:"inode"`                                                 // Inode of the file
 	InUpperLayer bool   `field:"in_upper_layer,ResolveFileFieldsInUpperLayer" msg:"in_upper_layer"` // Indicator of the file layer, in an OverlayFS for example
 
-	NLink  uint32 `field:"-" msg:"-"`
-	PathID uint32 `field:"-" msg:"-"`
-	Flags  int32  `field:"-" msg:"-"`
+	NLink  uint32 `field:"-" msg:"-" json:"-"`
+	PathID uint32 `field:"-" msg:"-" json:"-"`
+	Flags  int32  `field:"-" msg:"-" json:"-"`
 }
 
 // HasHardLinks returns whether the file has hardlink
@@ -368,7 +375,7 @@ type FileEvent struct {
 	BasenameStr string `field:"name,ResolveFileBasename" msg:"name"`               // File's basename
 	Filesytem   string `field:"filesystem,ResolveFileFilesystem" msg:"filesystem"` // File's filesystem
 
-	PathResolutionError error `field:"-" msg:"-"`
+	PathResolutionError error `field:"-" msg:"-" json:"-"`
 }
 
 // GetPathResolutionError returns the path resolution error as a string if there is one
@@ -488,7 +495,7 @@ const (
 //msgp:ignore SELinuxEvent
 type SELinuxEvent struct {
 	File            FileEvent        `field:"-"`
-	EventKind       SELinuxEventKind `field:"-"`
+	EventKind       SELinuxEventKind `field:"-" json:"-"`
 	BoolName        string           `field:"bool.name,ResolveSELinuxBoolName"` // SELinux boolean name
 	BoolChangeValue string           `field:"bool.state"`                       // SELinux boolean new value
 	BoolCommitValue bool             `field:"bool_commit.state"`                // Indicator of a SELinux boolean commit operation
@@ -501,9 +508,9 @@ var zeroProcessContext ProcessContext
 type ProcessCacheEntry struct {
 	ProcessContext
 
-	refCount  uint64                     `field:"-" msg:"-"`
-	onRelease func(_ *ProcessCacheEntry) `field:"-" msg:"-"`
-	releaseCb func()                     `field:"-" msg:"-"`
+	refCount  uint64                     `field:"-" msg:"-" json:"-"`
+	onRelease func(_ *ProcessCacheEntry) `field:"-" msg:"-" json:"-"`
+	releaseCb func()                     `field:"-" msg:"-" json:"-"`
 }
 
 // Reset the entry
@@ -583,7 +590,7 @@ type RenameEvent struct {
 	SyscallEvent
 	Old               FileEvent `field:"file"`
 	New               FileEvent `field:"file.destination"`
-	DiscarderRevision uint32    `field:"-"`
+	DiscarderRevision uint32    `field:"-" json:"-"`
 }
 
 // RmdirEvent represents a rmdir event
@@ -591,7 +598,7 @@ type RenameEvent struct {
 type RmdirEvent struct {
 	SyscallEvent
 	File              FileEvent `field:"file"`
-	DiscarderRevision uint32    `field:"-"`
+	DiscarderRevision uint32    `field:"-" json:"-"`
 }
 
 // SetXAttrEvent represents an extended attributes event
@@ -602,7 +609,7 @@ type SetXAttrEvent struct {
 	Namespace string    `field:"file.destination.namespace,ResolveXAttrNamespace"` // Namespace of the extended attribute
 	Name      string    `field:"file.destination.name,ResolveXAttrName"`           // Name of the extended attribute
 
-	NameRaw [200]byte `field:"-"`
+	NameRaw [200]byte `field:"-" json:"-"`
 }
 
 // SyscallEvent contains common fields for all the event
@@ -615,8 +622,8 @@ type SyscallEvent struct {
 type UnlinkEvent struct {
 	SyscallEvent
 	File              FileEvent `field:"file"`
-	Flags             uint32    `field:"-"`
-	DiscarderRevision uint32    `field:"-"`
+	Flags             uint32    `field:"-" json:"-"`
+	DiscarderRevision uint32    `field:"-" json:"-"`
 }
 
 // UmountEvent represents an umount event
@@ -631,8 +638,8 @@ type UmountEvent struct {
 type UtimesEvent struct {
 	SyscallEvent
 	File  FileEvent `field:"file"`
-	Atime time.Time `field:"-"`
-	Mtime time.Time `field:"-"`
+	Atime time.Time `field:"-" json:"-"`
+	Mtime time.Time `field:"-" json:"-"`
 }
 
 // BPFEvent represents a BPF event
@@ -648,15 +655,15 @@ type BPFEvent struct {
 // BPFMap represents a BPF map
 //msgp:ignore BPFMap
 type BPFMap struct {
-	ID   uint32 `field:"-"`    // ID of the eBPF map
-	Type uint32 `field:"type"` // Type of the eBPF map
-	Name string `field:"name"` // Name of the eBPF map (added in 7.35)
+	ID   uint32 `field:"-" json:"-"` // ID of the eBPF map
+	Type uint32 `field:"type"`       // Type of the eBPF map
+	Name string `field:"name"`       // Name of the eBPF map (added in 7.35)
 }
 
 // BPFProgram represents a BPF program
 //msgp:ignore BPFProgram
 type BPFProgram struct {
-	ID         uint32   `field:"-"`                      // ID of the eBPF program
+	ID         uint32   `field:"-" json:"-"`             // ID of the eBPF program
 	Type       uint32   `field:"type"`                   // Type of the eBPF program
 	AttachType uint32   `field:"attach_type"`            // Attach type of the eBPF program
 	Helpers    []uint32 `field:"helpers,ResolveHelpers"` // eBPF helpers used by the eBPF program (added in 7.35)
@@ -670,8 +677,8 @@ type PTraceEvent struct {
 	SyscallEvent
 
 	Request uint32         `field:"request"` //  ptrace request
-	PID     uint32         `field:"-"`
-	Address uint64         `field:"-"`
+	PID     uint32         `field:"-" json:"-"`
+	Address uint64         `field:"-" json:"-"`
 	Tracee  ProcessContext `field:"tracee"` // process context of the tracee
 }
 
@@ -681,9 +688,9 @@ type MMapEvent struct {
 	SyscallEvent
 
 	File       FileEvent `field:"file"`
-	Addr       uint64    `field:"-"`
-	Offset     uint64    `field:"-"`
-	Len        uint32    `field:"-"`
+	Addr       uint64    `field:"-" json:"-"`
+	Offset     uint64    `field:"-" json:"-"`
+	Len        uint32    `field:"-" json:"-"`
 	Protection int       `field:"protection"` // memory segment protection
 	Flags      int       `field:"flags"`      // memory segment flags
 }
@@ -693,8 +700,8 @@ type MMapEvent struct {
 type MProtectEvent struct {
 	SyscallEvent
 
-	VMStart       uint64 `field:"-"`
-	VMEnd         uint64 `field:"-"`
+	VMStart       uint64 `field:"-" json:"-"`
+	VMEnd         uint64 `field:"-" json:"-"`
 	VMProtection  int    `field:"vm_protection"`  // initial memory segment protection
 	ReqProtection int    `field:"req_protection"` // new memory segment protection
 }
@@ -747,7 +754,7 @@ type CgroupTracingEvent struct {
 // NetworkDeviceContext represents the network device context of a network event
 //msgp:ignore NetworkDeviceContext
 type NetworkDeviceContext struct {
-	NetNS   uint32 `field:"-"`
+	NetNS   uint32 `field:"-" json:"-"`
 	IfIndex uint32 `field:"ifindex"`                           // interface ifindex
 	IfName  string `field:"ifname,ResolveNetworkDeviceIfName"` // interface ifname
 }
@@ -755,7 +762,7 @@ type NetworkDeviceContext struct {
 // IPPortContext is used to hold an IP and Port
 //msgp:ignore IPPortContext
 type IPPortContext struct {
-	IP   net.IP `field:"-"`
+	IP   net.IP `field:"-" json:"-"`
 	Port uint16 `field:"port"` // Port number
 }
 
@@ -774,7 +781,7 @@ type NetworkContext struct {
 // DNSEvent represents a DNS event
 //msgp:ignore DNSEvent
 type DNSEvent struct {
-	ID    uint16 `field:"-"`
+	ID    uint16 `field:"-" json:"-"`
 	Name  string `field:"question.name"`  // the queried domain name
 	Type  uint16 `field:"question.type"`  // a two octet code which specifies the DNS question type
 	Class uint16 `field:"question.class"` // the class looked up by the DNS question
