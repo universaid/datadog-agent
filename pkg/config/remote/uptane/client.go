@@ -33,15 +33,18 @@ type Client struct {
 	directorTUFClient   *client.Client
 
 	targetStore *targetStore
+
+	transactionalStore *transactionalStore
 }
 
 // NewClient creates a new uptane client
 func NewClient(cacheDB *bbolt.DB, cacheKey string, orgID int64) (*Client, error) {
-	localStoreConfig, err := newLocalStoreConfig(cacheDB, cacheKey)
+	transactionalStore := newTransactionalStore(cacheDB)
+	localStoreConfig, err := newLocalStoreConfig(transactionalStore, cacheKey)
 	if err != nil {
 		return nil, err
 	}
-	localStoreDirector, err := newLocalStoreDirector(cacheDB, cacheKey)
+	localStoreDirector, err := newLocalStoreDirector(transactionalStore, cacheKey)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +59,7 @@ func NewClient(cacheDB *bbolt.DB, cacheKey string, orgID int64) (*Client, error)
 		directorLocalStore:  localStoreDirector,
 		directorRemoteStore: newRemoteStoreDirector(targetStore),
 		targetStore:         targetStore,
+		transactionalStore:  transactionalStore,
 	}
 	c.configTUFClient = client.NewClient(c.configLocalStore, c.configRemoteStore)
 	c.directorTUFClient = client.NewClient(c.directorLocalStore, c.directorRemoteStore)
@@ -66,6 +70,9 @@ func NewClient(cacheDB *bbolt.DB, cacheKey string, orgID int64) (*Client, error)
 func (c *Client) Update(response *pbgo.LatestConfigsResponse) error {
 	c.Lock()
 	defer c.Unlock()
+
+	defer c.transactionalStore.rollback()
+
 	err := c.updateRepos(response)
 	if err != nil {
 		return err
@@ -74,7 +81,12 @@ func (c *Client) Update(response *pbgo.LatestConfigsResponse) error {
 	if err != nil {
 		return err
 	}
-	return c.verify()
+	err = c.verify()
+	if err != nil {
+		return err
+	}
+
+	return c.transactionalStore.commit()
 }
 
 // TargetsCustom returns the current targets custom of this uptane client
