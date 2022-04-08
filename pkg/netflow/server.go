@@ -48,7 +48,7 @@ func NewNetflowServer(demultiplexer aggregator.Demultiplexer) (*Server, error) {
 		log.Infof("Starting Netflow listener for flow type %s on %s", listenerConfig.FlowType, listenerConfig.Addr())
 		listener, err := startFlowListener(listenerConfig, flowAgg)
 		if err != nil {
-			log.Warnf("Error starting listener for config (flow_type:%s, bind_Host:%s, port:%d):", listenerConfig.FlowType, listenerConfig.BindHost, listenerConfig.Port, err)
+			log.Warnf("Error starting listener for config (flow_type:%s, bind_Host:%s, port:%d): %s", listenerConfig.FlowType, listenerConfig.BindHost, listenerConfig.Port, err)
 			continue
 		}
 		listeners = append(listeners, listener)
