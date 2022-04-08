@@ -105,6 +105,7 @@ func (c *tcpCloseConsumer) Start(callback func([]network.ConnectionStats)) {
 				c.batchManager.ExtractBatchInto(c.buffer, batch, batchData.CPU)
 				callback(c.buffer.Connections())
 				c.buffer.Reset()
+				perfPool.Put(batchData.Data)
 			case lostCount, ok := <-c.perfHandler.LostChannel:
 				if !ok {
 					return

@@ -10,6 +10,7 @@ package kprobe
 
 import (
 	"os"
+	"sync"
 
 	"github.com/DataDog/datadog-agent/pkg/ebpf"
 	"github.com/DataDog/datadog-agent/pkg/network/ebpf/probes"
@@ -20,7 +21,15 @@ const (
 	// maxActive configures the maximum number of instances of the kretprobe-probed functions handled simultaneously.
 	// This value should be enough for typical workloads (e.g. some amount of processes blocked on the `accept` syscall).
 	maxActive = 128
+
+	bufferSize = 200
 )
+
+var perfPool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, bufferSize)
+	},
+}
 
 func newManager(closedHandler *ebpf.PerfHandler, runtimeTracer bool) *manager.Manager {
 	mgr := &manager.Manager{
@@ -46,6 +55,9 @@ func newManager(closedHandler *ebpf.PerfHandler, runtimeTracer bool) *manager.Ma
 					Watermark:          1,
 					DataHandler:        closedHandler.DataHandler,
 					LostHandler:        closedHandler.LostHandler,
+					SampleAllocator: func(int) ([]byte, error) {
+						return perfPool.Get().([]byte), nil
+					},
 				},
 			},
 		},
