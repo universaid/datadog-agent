@@ -22,7 +22,7 @@ const (
 	// This value should be enough for typical workloads (e.g. some amount of processes blocked on the `accept` syscall).
 	maxActive = 128
 
-	bufferSize = 200
+	bufferSize = 500
 )
 
 var perfPool = sync.Pool{
@@ -55,8 +55,8 @@ func newManager(closedHandler *ebpf.PerfHandler, runtimeTracer bool) *manager.Ma
 					Watermark:          1,
 					DataHandler:        closedHandler.DataHandler,
 					LostHandler:        closedHandler.LostHandler,
-					SampleAllocator: func(int) ([]byte, error) {
-						return perfPool.Get().([]byte), nil
+					SampleAllocator: func(size int) ([]byte, error) {
+						return perfPool.Get().([]byte)[:size], nil
 					},
 				},
 			},
