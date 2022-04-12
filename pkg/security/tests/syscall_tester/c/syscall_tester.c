@@ -178,7 +178,7 @@ int test_signal_eperm(void) {
     return EXIT_SUCCESS;
 }
 
-int test_signal(int argc, char** argv) {
+int test_signal(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "%s: Please pass a test case in: sigusr, eperm.\n", __FUNCTION__);
         return EXIT_FAILURE;
@@ -193,23 +193,34 @@ int test_signal(int argc, char** argv) {
 }
 
 int test_splice() {
-	const int fd = open("/tmp/splice_test", O_RDONLY | O_CREAT, 0700);
-	if (fd < 0) {
-		fprintf(stderr, "open failed");
-		return EXIT_FAILURE;
-	}
+    const int fd = open("/tmp/splice_test", O_RDONLY | O_CREAT, 0700);
+    if (fd < 0) {
+        fprintf(stderr, "open failed");
+        return EXIT_FAILURE;
+    }
 
-	int p[2];
-	if (pipe(p)) {
+    int p[2];
+    if (pipe(p)) {
         fprintf(stderr, "pipe failed");
         return EXIT_FAILURE;
-	}
+    }
 
     loff_t offset = 1;
     splice(fd, 0, p[1], NULL, 1, 0);
     close(fd);
     sleep(5);
     remove("/tmp/splice_test");
+
+    return EXIT_SUCCESS;
+}
+
+int self_exec(int argc, char **argv) {
+    if (argc < 2) {
+        fprintf(stderr, "Please pass a command name\n");
+        return EXIT_FAILURE;
+    }
+
+    execv("/proc/self/exe", argv + 1);
 
     return EXIT_SUCCESS;
 }
@@ -234,6 +245,8 @@ int main(int argc, char **argv) {
         return test_signal(argc - 1, argv + 1);
     } else if (strcmp(cmd, "splice") == 0) {
         return test_splice();
+    } else if (strcmp(cmd, "self-exec") == 0) {
+        return self_exec(argc - 1, argv + 1);
     } else {
         fprintf(stderr, "Unknown command `%s`\n", cmd);
         return EXIT_FAILURE;

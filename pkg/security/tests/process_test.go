@@ -115,6 +115,10 @@ func TestProcessContext(t *testing.T) {
 			ID:         "test_rule_args_envs_dedup",
 			Expression: `exec.file.name == "ls" && exec.argv == "test123456"`,
 		},
+		{
+			ID:         "test_self_exec",
+			Expression: `exec.file.name == "syscall_tester" && exec.argv0 == "selfexec123" && process.comm == "exe"`,
+		},
 	}
 
 	test, err := newTestModule(t, nil, ruleDefs, testOpts{})
@@ -122,6 +126,11 @@ func TestProcessContext(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer test.Close()
+
+	syscallTester, err := loadSyscallTester(t, test, "syscall_tester")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("exec-time", func(t *testing.T) {
 		testFile, _, err := test.Path("test-exec-time-1")
@@ -595,6 +604,24 @@ func TestProcessContext(t *testing.T) {
 
 			if _, err := jsonpath.JsonPathLookup(data, "$.process.ancestors[1].envs"); err != nil {
 				t.Error("should have envs")
+			}
+		})
+	})
+
+	test.Run(t, "self-exec", func(t *testing.T, kind wrapperType, cmdFunc func(cmd string, args []string, envs []string) *exec.Cmd) {
+		args := []string{"self-exec", "selfexec123", "abc"}
+		envs := []string{}
+
+		test.WaitSignal(t, func() error {
+			cmd := cmdFunc(syscallTester, args, envs)
+			_, _ = cmd.CombinedOutput()
+
+			return nil
+		}, func(event *sprobe.Event, rule *rules.Rule) {
+			assert.Equal(t, "test_self_exec", rule.ID, "wrong rule triggered")
+
+			if !validateExecSchema(t, event) {
+				t.Error(event.String())
 			}
 		})
 	})
