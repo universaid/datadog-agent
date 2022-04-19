@@ -1148,6 +1148,18 @@ LIMIT 1
 			query:    `SELECT * FROM dbo.Items WHERE id = 1 or /*!obfuscation*/ 1 = 1`,
 			expected: `SELECT * FROM dbo.Items WHERE id = ? or ? = ?`,
 		},
+		{
+			"INSERT INTO m_api_payments_consumer_location (`api_payment_id`, `latitude`, `longitude`, `accuracy_radius`, `country_code`, `city`) VALUES ('string', 53.3472, -6.2439, 200, 'IE', 'Münster')",
+			"INSERT INTO m_api_payments_consumer_location ( api_payment_id, latitude, longitude, accuracy_radius, country_code, city ) VALUES ( ? )",
+		},
+		{
+			`SELECT * FROM m_api_payments WHERE token LIKE 'asdkvnjsdfv6sdfv'`,
+			`SELECT * FROM m_api_payments WHERE token LIKE ?`,
+		},
+		{
+			`INSERT INTO m_paymentprocessing_outbox_messages (payload, created_at_utc ) VALUES ('{ "headers": {"head1": "value"}}', 2345678908765)`,
+			`INSERT INTO m_paymentprocessing_outbox_messages ( payload, created_at_utc ) VALUES ( ? )`,
+		},
 	}
 	o := NewObfuscator(Config{})
 	for _, c := range cases {
