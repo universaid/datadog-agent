@@ -1077,6 +1077,10 @@ func combineChildren(children map[string]*FileActivityNode) map[string]*FileActi
 }
 
 func areCompatibleFans(a *FileActivityNode, b *FileActivityNode) bool {
+	if len(a.Children) != 0 || len(b.Children) != 0 {
+		return false
+	}
+
 	return reflect.DeepEqual(a.Open, b.Open)
 }
 
