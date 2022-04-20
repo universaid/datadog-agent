@@ -11,7 +11,6 @@ package module
 import (
 	sprobe "github.com/DataDog/datadog-agent/pkg/security/probe"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/rules"
-	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
 // ProcessMonitoring describes a process monitoring object
@@ -26,20 +25,15 @@ func (p *ProcessMonitoring) HandleEvent(event *sprobe.Event) {
 		return
 	}
 
-	data, err := entry.MarshalMsg(nil)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	// data to send
-	_ = data
+	// Should we use cache entry or raw event?
+	p.module.apiServer.SendProcessEvent(event)
 }
 
 // HandleCustomEvent implement the EventHandler interface
 func (p *ProcessMonitoring) HandleCustomEvent(rule *rules.Rule, event *sprobe.CustomEvent) {
 }
 
+// NewProcessMonitoring creates a new ProcessMonitoring
 func NewProcessMonitoring(module *Module) *ProcessMonitoring {
 	return &ProcessMonitoring{
 		module: module,

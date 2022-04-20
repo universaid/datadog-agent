@@ -132,7 +132,7 @@ type Config struct {
 	RuntimeCompiledConstantsEnabled bool
 	// RuntimeCompiledConstantsIsSet is set if the runtime compiled constants option is user-set
 	RuntimeCompiledConstantsIsSet bool
-	// EventMonitoring enabled event monitoring
+	// EventMonitoring enables event monitoring
 	EventMonitoring bool
 }
 
