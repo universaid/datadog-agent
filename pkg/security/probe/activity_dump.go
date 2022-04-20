@@ -991,10 +991,6 @@ func (fan *FileActivityNode) InsertFileEvent(fileEvent *model.FileEvent, event *
 		return false
 	}
 
-	if len(fan.Children) >= 10 {
-		fan.mergeCommonPaths()
-	}
-
 	child, ok := fan.Children[parent]
 	if ok {
 		return child.InsertFileEvent(fileEvent, event, remainingPath[nextParentIndex:], generationType)
@@ -1008,6 +1004,9 @@ func (fan *FileActivityNode) InsertFileEvent(fileEvent *model.FileEvent, event *
 		child.InsertFileEvent(fileEvent, event, remainingPath[nextParentIndex:], generationType)
 		fan.Children[parent] = child
 	}
+
+	fan.mergeCommonPaths()
+
 	return true
 }
 
