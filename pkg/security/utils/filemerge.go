@@ -74,7 +74,7 @@ func commonSuffix(ap, bp StringPair) string {
 
 	}
 
-	return string(a[i+1:])
+	return a[i+1:]
 }
 
 // BuildGlob builds a common glob from two string pairs if sufficiently similar
