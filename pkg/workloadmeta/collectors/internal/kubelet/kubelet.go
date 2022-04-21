@@ -19,6 +19,7 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/util/containers"
 	"github.com/DataDog/datadog-agent/pkg/util/kubernetes/kubelet"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
+	"github.com/DataDog/datadog-agent/pkg/util/retry"
 	"github.com/DataDog/datadog-agent/pkg/workloadmeta"
 )
 
@@ -41,7 +42,7 @@ func init() {
 	})
 }
 
-func (c *collector) Start(_ context.Context, store workloadmeta.Store) error {
+func (c *collector) Start(ctx context.Context, store workloadmeta.Store) error {
 	if !config.IsFeaturePresent(config.Kubernetes) {
 		return errors.NewDisabled(componentName, "Agent is not running on Kubernetes")
 	}
@@ -54,6 +55,15 @@ func (c *collector) Start(_ context.Context, store workloadmeta.Store) error {
 	c.watcher, err = kubelet.NewPodWatcher(expireFreq)
 	if err != nil {
 		return err
+	}
+
+	err = c.Pull(ctx)
+	if err != nil {
+		return &retry.Error{
+			LogicError:    err,
+			RessourceName: collectorID,
+			RetryStatus:   retry.FailWillRetry,
+		}
 	}
 
 	return nil
@@ -132,6 +142,7 @@ func (c *collector) parsePods(pods []*kubelet.Pod) []workloadmeta.CollectorEvent
 			IP:                         pod.Status.PodIP,
 			PriorityClass:              pod.Spec.PriorityClassName,
 			QOSClass:                   pod.Status.QOSClass,
+			HostNetwork:                pod.Spec.HostNetwork,
 		}
 
 		events = append(events, containerEvents...)
