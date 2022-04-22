@@ -1,4 +1,3 @@
-//go:generate go run github.com/mailru/easyjson/easyjson -gen_build_flags=-mod=mod -no_std_marshalers -build_tags linux $GOFILE
 //go:generate go run github.com/DataDog/datadog-agent/pkg/security/probe/doc_generator -output ../../../docs/cloud-workload-security/backend.schema.json
 
 // Unless explicitly stated otherwise all files in this repository are licensed
@@ -23,7 +22,6 @@ import (
 )
 
 // FileSerializer serializes a file to JSON
-// easyjson:json
 type FileSerializer struct {
 	Path                string     `json:"path,omitempty" jsonschema_description:"File path"`
 	Name                string     `json:"name,omitempty" jsonschema_description:"File basename"`
@@ -46,14 +44,12 @@ type FileSerializer struct {
 }
 
 // UserContextSerializer serializes a user context to JSON
-// easyjson:json
 type UserContextSerializer struct {
 	User  string `json:"id,omitempty" jsonschema_description:"User name"`
 	Group string `json:"group,omitempty" jsonschema_description:"Group name"`
 }
 
 // CredentialsSerializer serializes a set credentials to JSON
-// easyjson:json
 type CredentialsSerializer struct {
 	UID          int      `json:"uid" jsonschema_description:"User ID"`
 	User         string   `json:"user,omitempty" jsonschema_description:"User name"`
@@ -72,7 +68,6 @@ type CredentialsSerializer struct {
 }
 
 // SetuidSerializer serializes a setuid event
-// easyjson:json
 type SetuidSerializer struct {
 	UID    int    `json:"uid" jsonschema_description:"User ID"`
 	User   string `json:"user,omitempty" jsonschema_description:"User name"`
@@ -83,7 +78,6 @@ type SetuidSerializer struct {
 }
 
 // SetgidSerializer serializes a setgid event
-// easyjson:json
 type SetgidSerializer struct {
 	GID     int    `json:"gid" jsonschema_description:"Group ID"`
 	Group   string `json:"group,omitempty" jsonschema_description:"Group name"`
@@ -94,21 +88,18 @@ type SetgidSerializer struct {
 }
 
 // CapsetSerializer serializes a capset event
-// easyjson:json
 type CapsetSerializer struct {
 	CapEffective []string `json:"cap_effective" jsonschema_description:"Effective Capacity set"`
 	CapPermitted []string `json:"cap_permitted" jsonschema_description:"Permitted Capacity set"`
 }
 
 // ProcessCredentialsSerializer serializes the process credentials to JSON
-// easyjson:json
 type ProcessCredentialsSerializer struct {
 	*CredentialsSerializer
 	Destination interface{} `json:"destination,omitempty" jsonschema_description:"Credentials after the operation"`
 }
 
 // ProcessSerializer serializes a process to JSON
-// easyjson:json
 type ProcessSerializer struct {
 	Pid                 uint32                        `json:"pid,omitempty" jsonschema_description:"Process ID"`
 	PPid                uint32                        `json:"ppid,omitempty" jsonschema_description:"Parent Process ID"`
@@ -134,13 +125,11 @@ type ProcessSerializer struct {
 }
 
 // ContainerContextSerializer serializes a container context to JSON
-// easyjson:json
 type ContainerContextSerializer struct {
 	ID string `json:"id,omitempty" jsonschema_description:"Container ID"`
 }
 
 // FileEventSerializer serializes a file event to JSON
-// easyjson:json
 type FileEventSerializer struct {
 	FileSerializer
 	Destination *FileSerializer `json:"destination,omitempty" jsonschema_description:"Target file information"`
@@ -153,7 +142,6 @@ type FileEventSerializer struct {
 }
 
 // EventContextSerializer serializes an event context to JSON
-// easyjson:json
 type EventContextSerializer struct {
 	Name     string `json:"name,omitempty" jsonschema_description:"Event name"`
 	Category string `json:"category,omitempty" jsonschema_description:"Event category"`
@@ -161,31 +149,26 @@ type EventContextSerializer struct {
 }
 
 // ProcessContextSerializer serializes a process context to JSON
-// easyjson:json
 type ProcessContextSerializer struct {
 	*ProcessSerializer
 	Parent    *ProcessSerializer   `json:"parent,omitempty" jsonschema_description:"Parent process"`
 	Ancestors []*ProcessSerializer `json:"ancestors,omitempty" jsonschema_description:"Ancestor processes"`
 }
 
-// easyjson:json
 type selinuxBoolChangeSerializer struct {
 	Name  string `json:"name,omitempty" jsonschema_description:"SELinux boolean name"`
 	State string `json:"state,omitempty" jsonschema_description:"SELinux boolean state ('on' or 'off')"`
 }
 
-// easyjson:json
 type selinuxEnforceStatusSerializer struct {
 	Status string `json:"status,omitempty" jsonschema_description:"SELinux enforcement status (one of 'enforcing', 'permissive' or 'disabled')"`
 }
 
-// easyjson:json
 type selinuxBoolCommitSerializer struct {
 	State bool `json:"state,omitempty" jsonschema_description:"SELinux boolean commit operation"`
 }
 
 // SELinuxEventSerializer serializes a SELinux context to JSON
-// easyjson:json
 type SELinuxEventSerializer struct {
 	BoolChange    *selinuxBoolChangeSerializer    `json:"bool,omitempty" jsonschema_description:"SELinux boolean operation"`
 	EnforceStatus *selinuxEnforceStatusSerializer `json:"enforce,omitempty" jsonschema_description:"SELinux enforcement change"`
@@ -193,14 +176,12 @@ type SELinuxEventSerializer struct {
 }
 
 // BPFMapSerializer serializes a BPF map to JSON
-// easyjson:json
 type BPFMapSerializer struct {
 	Name    string `json:"name,omitempty" jsonschema_description:"Name of the BPF map"`
 	MapType string `json:"map_type,omitempty" jsonschema_description:"Type of the BPF map"`
 }
 
 // BPFProgramSerializer serializes a BPF map to JSON
-// easyjson:json
 type BPFProgramSerializer struct {
 	Name        string   `json:"name,omitempty" jsonschema_description:"Name of the BPF program"`
 	Tag         string   `json:"tag,omitempty" jsonschema_description:"Hash (sha1) of the BPF program"`
@@ -210,7 +191,6 @@ type BPFProgramSerializer struct {
 }
 
 // BPFEventSerializer serializes a BPF event to JSON
-// easyjson:json
 type BPFEventSerializer struct {
 	Cmd     string                `json:"cmd" jsonschema_description:"BPF command"`
 	Map     *BPFMapSerializer     `json:"map,omitempty" jsonschema_description:"BPF map"`
@@ -218,7 +198,6 @@ type BPFEventSerializer struct {
 }
 
 // MMapEventSerializer serializes a mmap event to JSON
-// easyjson:json
 type MMapEventSerializer struct {
 	Address    string `json:"address" jsonschema_description:"memory segment address"`
 	Offset     uint64 `json:"offset" jsonschema_description:"file offset"`
@@ -228,7 +207,6 @@ type MMapEventSerializer struct {
 }
 
 // MProtectEventSerializer serializes a mmap event to JSON
-// easyjson:json
 type MProtectEventSerializer struct {
 	VMStart       string `json:"vm_start" jsonschema_description:"memory segment start address"`
 	VMEnd         string `json:"vm_end" jsonschema_description:"memory segment end address"`
@@ -237,7 +215,6 @@ type MProtectEventSerializer struct {
 }
 
 // PTraceEventSerializer serializes a mmap event to JSON
-// easyjson:json
 type PTraceEventSerializer struct {
 	Request string                    `json:"request" jsonschema_description:"ptrace request"`
 	Address string                    `json:"address" jsonschema_description:"address at which the ptrace request was executed"`
@@ -245,7 +222,6 @@ type PTraceEventSerializer struct {
 }
 
 // SignalEventSerializer serializes a signal event to JSON
-// easyjson:json
 type SignalEventSerializer struct {
 	Type   string                    `json:"type" jsonschema_description:"signal type"`
 	PID    uint32                    `json:"pid" jsonschema_description:"signal target pid"`
@@ -253,7 +229,6 @@ type SignalEventSerializer struct {
 }
 
 // NetworkDeviceSerializer serializes the network device context to JSON
-// easyjson:json
 type NetworkDeviceSerializer struct {
 	NetNS   uint32 `json:"netns" jsonschema_description:"netns is the interface ifindex"`
 	IfIndex uint32 `json:"ifindex" jsonschema_description:"ifindex is the network interface ifindex"`
@@ -261,14 +236,12 @@ type NetworkDeviceSerializer struct {
 }
 
 // IPPortSerializer is used to serialize an IP and Port context to JSON
-// easyjson:json
 type IPPortSerializer struct {
 	IP   string `json:"ip" jsonschema_description:"IP address"`
 	Port uint16 `json:"port" jsonschema_description:"Port number"`
 }
 
 // NetworkContextSerializer serializes the network context to JSON
-// easyjson:json
 type NetworkContextSerializer struct {
 	Device *NetworkDeviceSerializer `json:"device,omitempty" jsonschema_description:"device is the network device on which the event was captured"`
 
@@ -280,7 +253,6 @@ type NetworkContextSerializer struct {
 }
 
 // DNSQuestionSerializer serializes a DNS question to JSON
-// easyjson:json
 type DNSQuestionSerializer struct {
 	Class string `json:"class" jsonschema_description:"class is the class looked up by the DNS question"`
 	Type  string `json:"type" jsonschema_description:"type is a two octet code which specifies the DNS question type"`
@@ -290,35 +262,30 @@ type DNSQuestionSerializer struct {
 }
 
 // DNSEventSerializer serializes a dns event to JSON
-// easyjson:json
 type DNSEventSerializer struct {
 	ID       uint16                 `json:"id" jsonschema_description:"id is the unique identifier of the DNS request"`
 	Question *DNSQuestionSerializer `json:"question,omitempty" jsonschema_description:"question is a DNS question for the DNS request"`
 }
 
 // DDContextSerializer serializes a span context to JSON
-// easyjson:json
 type DDContextSerializer struct {
 	SpanID  uint64 `json:"span_id,omitempty" jsonschema_description:"Span ID used for APM correlation"`
 	TraceID uint64 `json:"trace_id,omitempty" jsonschema_description:"Trace ID used for APM correlation"`
 }
 
 // ModuleEventSerializer serializes a module event to JSON
-// easyjson:json
 type ModuleEventSerializer struct {
 	Name             string `json:"name" jsonschema_description:"module name"`
 	LoadedFromMemory *bool  `json:"loaded_from_memory,omitempty" jsonschema_description:"indicates if a module was loaded from memory, as opposed to a file"`
 }
 
 // SpliceEventSerializer serializes a splice event to JSON
-// easyjson:json
 type SpliceEventSerializer struct {
 	PipeEntryFlag string `json:"pipe_entry_flag" jsonschema_description:"Entry flag of the fd_out pipe passed to the splice syscall"`
 	PipeExitFlag  string `json:"pipe_exit_flag" jsonschema_description:"Exit flag of the fd_out pipe passed to the splice syscall"`
 }
 
 // EventSerializer serializes an event to JSON
-// easyjson:json
 type EventSerializer struct {
 	EventContextSerializer      `json:"evt,omitempty"`
 	*FileEventSerializer        `json:"file,omitempty"`

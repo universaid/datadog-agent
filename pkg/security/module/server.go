@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
-	easyjson "github.com/mailru/easyjson"
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 
@@ -377,7 +376,7 @@ func (a *APIServer) SendEvent(rule *rules.Rule, event Event, extTagsCb func() []
 		return
 	}
 
-	ruleEventJSON, err := easyjson.Marshal(ruleEvent)
+	ruleEventJSON, err := json.Marshal(ruleEvent)
 	if err != nil {
 		log.Error(errors.Wrap(err, "failed to marshal event context"))
 		return
