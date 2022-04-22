@@ -10,12 +10,13 @@ package module
 
 import (
 	"context"
-	json "encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/pkg/errors"

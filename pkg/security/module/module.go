@@ -10,7 +10,6 @@ package module
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -20,6 +19,8 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"github.com/goccy/go-json"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/hashicorp/go-multierror"

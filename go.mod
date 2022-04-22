@@ -415,7 +415,10 @@ require (
 	google.golang.org/grpc/credentials/insecure v0.0.0 // indirect
 )
 
-require github.com/docker/libnetwork v0.5.6
+require (
+	github.com/docker/libnetwork v0.5.6
+	github.com/goccy/go-json v0.9.7
+)
 
 require github.com/Sirupsen/logrus v1.0.6 // indirect
 

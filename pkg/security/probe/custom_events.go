@@ -9,8 +9,9 @@
 package probe
 
 import (
-	"encoding/json"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	"github.com/DataDog/datadog-agent/pkg/security/secl/compiler/eval"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/model"
