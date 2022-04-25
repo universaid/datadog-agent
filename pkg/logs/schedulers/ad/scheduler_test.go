@@ -19,7 +19,7 @@ import (
 
 func setup() (scheduler *Scheduler, spy *schedulers.MockSourceManager) {
 	cop := containersorpods.NewDecidedChooser(containersorpods.LogContainers)
-	scheduler = New(cop).(*Scheduler)
+	scheduler = New(cop, false).(*Scheduler)
 	spy = &schedulers.MockSourceManager{}
 	scheduler.mgr = spy
 	return scheduler, spy

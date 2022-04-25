@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/DataDog/datadog-agent/pkg/autodiscovery"
+	coreConfig "github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/logs/client/http"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/metrics"
 	"github.com/DataDog/datadog-agent/pkg/logs/internal/util/adlistener"
@@ -134,7 +135,7 @@ func start(getAC func() *autodiscovery.AutoConfig, serverless bool) (*Agent, err
 	isRunning.Store(true)
 	log.Info("logs-agent started")
 
-	agent.AddScheduler(adScheduler.New(cop))
+	agent.AddScheduler(adScheduler.New(cop, coreConfig.Datadog.GetBool("logs_config.container_collect_all")))
 	if !ddUtil.CcaInAD() {
 		agent.AddScheduler(ccaScheduler.New(getAC))
 	}

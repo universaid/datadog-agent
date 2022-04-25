@@ -42,16 +42,20 @@ type Scheduler struct {
 
 	// cancelStart cancels the startup of this component
 	cancelStart context.CancelFunc
+
+	// containerCollectAll indicates whether logs_config.container_collect_all is enabled.
+	containerCollectAll bool
 }
 
 var _ schedulers.Scheduler = &Scheduler{}
 
 // New creates a new scheduler.
-func New(cop containersorpods.Chooser) schedulers.Scheduler {
+func New(cop containersorpods.Chooser, containerCollectAll bool) schedulers.Scheduler {
 	sch := &Scheduler{
-		sourcesByServiceID: make(map[string]*logsConfig.LogSource),
-		logWhat:            containersorpods.LogUnknown,
-		cop:                cop,
+		sourcesByServiceID:  make(map[string]*logsConfig.LogSource),
+		logWhat:             containersorpods.LogUnknown,
+		cop:                 cop,
+		containerCollectAll: containerCollectAll,
 	}
 	sch.listener = adlistener.NewADListener("logs-agent AD scheduler", sch.Schedule, sch.Unschedule)
 	return sch
@@ -97,6 +101,19 @@ func (s *Scheduler) Stop() {
 // An entity represents a unique identifier for a process that be reused to query logs.
 func (s *Scheduler) Schedule(configs []integration.Config) {
 	for _, config := range configs {
+		if util.CcaInAD() && s.containerCollectAll && config.IsBareConfig() {
+			// (NOTE: when removing util.CcaInAD, integrate this with toSources)
+			source, err := s.bareSource(config)
+			if err != nil {
+				log.Warnf("Invalid configuration: %v", err)
+				continue
+			}
+			if source != nil {
+				s.mgr.AddSource(source)
+				s.sourcesByServiceID[source.Config.Identifier] = source
+			}
+			continue
+		}
 		if !config.IsLogConfig() {
 			continue
 		}
@@ -143,6 +160,19 @@ func (s *Scheduler) Schedule(configs []integration.Config) {
 // Unschedule removes all the sources and services matching the integration configs.
 func (s *Scheduler) Unschedule(configs []integration.Config) {
 	for _, config := range configs {
+		if util.CcaInAD() && s.containerCollectAll && config.IsBareConfig() {
+			// (NOTE: when removing util.CcaInAD, integrate this with the case below)
+			_, identifier, err := s.parseServiceID(config.ServiceID)
+			if err != nil {
+				log.Warnf("Invalid configuration: %v", err)
+				continue
+			}
+			if source, found := s.sourcesByServiceID[identifier]; found {
+				delete(s.sourcesByServiceID, identifier)
+				s.mgr.RemoveSource(source)
+			}
+			continue
+		}
 		if !config.IsLogConfig() || config.HasFilter(containers.LogsFilter) {
 			continue
 		}
@@ -279,6 +309,47 @@ func (s *Scheduler) toSources(config integration.Config) ([]*logsConfig.LogSourc
 	}
 
 	return sources, nil
+}
+
+// bareSource creates new source from a bare integration config, or returns nil
+// if no source is required.
+func (s *Scheduler) bareSource(config integration.Config) (*logsConfig.LogSource, error) {
+	var err error
+
+	serviceType, serviceIdent, err := s.parseServiceID(config.ServiceID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bare config ServiceID %s: %v", config.ServiceID, err)
+	}
+
+	// decide what to do based on the prefix of the ServiceID, which
+	// corresponds to the runtime -- see pkg/autodiscovery/README.md.
+	var cfg *logsConfig.LogsConfig
+	var sourceName string
+	switch serviceType {
+	case "docker":
+		// emulate the behavior of the old docker launcher or the old kubernetes launcher,
+		// depending on containersorpods's determination.
+		switch s.logWhat {
+		case containersorpods.LogContainers:
+			cfg, sourceName, err = s.bareContainerConfig(serviceIdent)
+		case containersorpods.LogPods:
+			cfg, sourceName, err = s.barePodConfig(serviceIdent, config.ServiceID)
+		default:
+			return nil, nil // if LogNeither, do nothing.
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error generating config for %s: %v", config.ServiceID, err)
+		}
+
+	default:
+		return nil, nil // no source for this bare config
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid bare config: %v", err)
+	}
+
+	return logsConfig.NewLogSource(sourceName, cfg), nil
 }
 
 // toService creates a new service for an integrationConfig.
