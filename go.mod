@@ -112,7 +112,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elastic/go-libaudit v0.4.0
 	github.com/fatih/color v1.13.0
-	github.com/florianl/go-conntrack v0.2.0
 	github.com/freddierice/go-losetup v0.0.0-20170407175016-fc9adea44124
 	github.com/go-ini/ini v1.66.4
 	github.com/go-ole/go-ole v1.2.6
@@ -204,6 +203,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gopkg.in/zorkian/go-datadog-api.v2 v2.30.0
 	gotest.tools v2.2.0+incompatible
+	inet.af/netaddr v0.0.0-20211027220019-c74959edd3b6
 	k8s.io/api v0.21.5
 	k8s.io/apimachinery v0.21.5
 	k8s.io/apiserver v0.21.5
