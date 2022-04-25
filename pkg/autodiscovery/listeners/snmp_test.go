@@ -172,61 +172,61 @@ func TestExtraConfig(t *testing.T) {
 		config:       snmpConfig,
 	}
 
-	info, err := svc.GetExtraConfig([]byte("autodiscovery_subnet"))
+	info, err := svc.GetExtraConfig("autodiscovery_subnet")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "192.168.0.0/24", string(info))
+	assert.Equal(t, "192.168.0.0/24", info)
 
-	info, err = svc.GetExtraConfig([]byte("community"))
+	info, err = svc.GetExtraConfig("community")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "public", string(info))
+	assert.Equal(t, "public", info)
 
-	info, err = svc.GetExtraConfig([]byte("timeout"))
+	info, err = svc.GetExtraConfig("timeout")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "5", string(info))
+	assert.Equal(t, "5", info)
 
-	info, err = svc.GetExtraConfig([]byte("retries"))
+	info, err = svc.GetExtraConfig("retries")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "2", string(info))
+	assert.Equal(t, "2", info)
 
-	info, err = svc.GetExtraConfig([]byte("oid_batch_size"))
+	info, err = svc.GetExtraConfig("oid_batch_size")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "10", string(info))
+	assert.Equal(t, "10", info)
 
-	info, err = svc.GetExtraConfig([]byte("tags"))
+	info, err = svc.GetExtraConfig("tags")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "", string(info))
+	assert.Equal(t, "", info)
 
-	info, err = svc.GetExtraConfig([]byte("collect_device_metadata"))
+	info, err = svc.GetExtraConfig("collect_device_metadata")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "false", string(info))
+	assert.Equal(t, "false", info)
 
 	svc.config.CollectDeviceMetadata = true
-	info, err = svc.GetExtraConfig([]byte("collect_device_metadata"))
+	info, err = svc.GetExtraConfig("collect_device_metadata")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "true", string(info))
+	assert.Equal(t, "true", info)
 
 	svc.config.CollectDeviceMetadata = false
-	info, err = svc.GetExtraConfig([]byte("collect_device_metadata"))
+	info, err = svc.GetExtraConfig("collect_device_metadata")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "false", string(info))
+	assert.Equal(t, "false", info)
 
-	info, err = svc.GetExtraConfig([]byte("min_collection_interval"))
+	info, err = svc.GetExtraConfig("min_collection_interval")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "0", string(info))
+	assert.Equal(t, "0", info)
 
 	svc.config.UseDeviceIDAsHostname = false
-	info, err = svc.GetExtraConfig([]byte("use_device_id_as_hostname"))
+	info, err = svc.GetExtraConfig("use_device_id_as_hostname")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "false", string(info))
+	assert.Equal(t, "false", info)
 
 	svc.config.MinCollectionInterval = 60
-	info, err = svc.GetExtraConfig([]byte("min_collection_interval"))
+	info, err = svc.GetExtraConfig("min_collection_interval")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "60", string(info))
+	assert.Equal(t, "60", info)
 
-	info, err = svc.GetExtraConfig([]byte("namespace"))
+	info, err = svc.GetExtraConfig("namespace")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "my-ns", string(info))
+	assert.Equal(t, "my-ns", info)
 }
 
 func TestExtraConfigExtraTags(t *testing.T) {
