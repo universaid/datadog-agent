@@ -137,7 +137,7 @@ func runEventListener(cmd *cobra.Command, args []string) error {
 				log.Error("could not unmarshal process event: ", err.Error())
 			}
 
-			fmt.Printf("New %s event collected at %v from process: %+v:\n", e.EventType, e.Date, *e.Process)
+			fmt.Printf("New %s event collected at %v from process: %+v\n", e.EventType, e.Date, *e.Process)
 		}
 	}
 

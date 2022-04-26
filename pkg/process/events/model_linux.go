@@ -14,7 +14,7 @@ import "time"
 type ProcessEvent struct {
 	*Process
 	EventType string    `json:"EventType"`
-	Date      time.Time `json:"date"`
+	Date      time.Time `json:"Date"`
 }
 
 // FileEvent holds information about the binary executed by a process
