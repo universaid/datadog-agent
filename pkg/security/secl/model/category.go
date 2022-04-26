@@ -39,7 +39,7 @@ func GetEventTypeCategory(eventType eval.EventType) EventCategory {
 		return ProcessCategory
 	case "bpf", "selinux", "mmap", "mprotect", "ptrace", "load_module", "unload_module":
 		return KernelCategory
-	case "dns":
+	case "dns", "bind":
 		return NetworkCategory
 	}
 

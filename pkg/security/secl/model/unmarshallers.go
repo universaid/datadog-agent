@@ -896,3 +896,21 @@ func (e *VethPairEvent) UnmarshalBinary(data []byte) (int, error) {
 
 	return cursor, nil
 }
+
+// UnmarshalBinary unmarshals a binary representation of itself
+func (e *BindEvent) UnmarshalBinary(data []byte) (int, error) {
+	read, err := UnmarshalBinary(data, &e.SyscallEvent)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(data)-read < 4 { // TODO
+		return 0, ErrNotEnoughData
+	}
+
+	e.Socket = int32(ByteOrder.Uint32(data[read : read+4]))
+	e.AddrFamily = "AF_INET" // TODO
+	e.Addr = "127.0.0.1"     // TODO
+	e.AddrPort = 4242        // TODO
+	return read + 4, nil     // TODO
+}

@@ -317,6 +317,15 @@ type SpliceEventSerializer struct {
 	PipeExitFlag  string `json:"pipe_exit_flag" jsonschema_description:"Exit flag of the fd_out pipe passed to the splice syscall"`
 }
 
+// BindEventSerializer serializes a bind event to JSON
+// easyjson:json
+type BindEventSerializer struct {
+	Socket     int32  `json:"socket" jsonschema_description:"bound socket"`
+	AddrFamily string `json:"addr_family" jsonschema_description:"address family"`
+	Addr       string `json:"addr" jsonschema_description:"bound address (if any)"`
+	AddrPort   uint32 `json:"addr_port" jsonschema_description:"bound port (if any)"`
+}
+
 // EventSerializer serializes an event to JSON
 // easyjson:json
 type EventSerializer struct {
@@ -332,6 +341,7 @@ type EventSerializer struct {
 	*SpliceEventSerializer      `json:"splice,omitempty"`
 	*DNSEventSerializer         `json:"dns,omitempty"`
 	*NetworkContextSerializer   `json:"network,omitempty"`
+	*BindEventSerializer        `json:"bind,omitempty"`
 	*UserContextSerializer      `json:"usr,omitempty"`
 	*ProcessContextSerializer   `json:"process,omitempty"`
 	*DDContextSerializer        `json:"dd,omitempty"`
@@ -699,6 +709,16 @@ func newNetworkContextSerializer(e *Event) *NetworkContextSerializer {
 	}
 }
 
+func newBindEventSerializer(e *Event) *BindEventSerializer {
+	bes := &BindEventSerializer{
+		Socket:     e.Bind.Socket,
+		AddrFamily: e.Bind.AddrFamily, // TODO: model.Bind(e.Bind.SocketType).String(),
+		Addr:       e.Bind.Addr,
+		AddrPort:   e.Bind.AddrPort,
+	}
+	return bes
+}
+
 func serializeSyscallRetval(retval int64) string {
 	switch {
 	case retval < 0:
@@ -941,6 +961,9 @@ func NewEventSerializer(event *Event) *EventSerializer {
 	case model.DNSEventType:
 		s.EventContextSerializer.Outcome = serializeSyscallRetval(0)
 		s.DNSEventSerializer = newDNSEventSerializer(&event.DNS)
+	case model.BindEventType:
+		s.EventContextSerializer.Outcome = serializeSyscallRetval(event.Bind.Retval)
+		s.BindEventSerializer = newBindEventSerializer(event)
 	}
 
 	return s

@@ -164,6 +164,7 @@ type Event struct {
 	LoadModule   LoadModuleEvent   `field:"load_module" event:"load_module"`     // [7.35] [Kernel] A new kernel module was loaded
 	UnloadModule UnloadModuleEvent `field:"unload_module" event:"unload_module"` // [7.35] [Kernel] A kernel module was deleted
 	DNS          DNSEvent          `field:"dns" event:"dns"`                     // [7.36] [Network] A DNS request was sent
+	Bind         BindEvent         `field:"bind" event:"bind"`                   // [7.37] [Network] A bind was executed
 
 	Mount            MountEvent            `field:"-"`
 	Umount           UmountEvent           `field:"-"`
@@ -794,6 +795,18 @@ type DNSEvent struct {
 	Class uint16 `field:"question.class"`                              // the class looked up by the DNS question
 	Size  uint16 `field:"question.size"`                               // the total DNS request size in bytes
 	Count uint16 `field:"question.count"`                              // the total count of questions in the DNS request
+}
+
+// BindEvent represents a bind event
+//msgp:ignore BindEvent
+type BindEvent struct {
+	SyscallEvent
+
+	Socket     int32  `field:"socket"`      // the socket to be bound
+	AddrFamily string `field:"addr_family"` // address family
+	Addr       string `field:"addr"`        // address (if any)
+	AddrPort   uint32 `field:"port"`        // port (if any)
+
 }
 
 // NetDevice represents a network device

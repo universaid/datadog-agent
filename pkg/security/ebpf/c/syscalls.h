@@ -194,6 +194,12 @@ struct syscall_cache_t {
             u32 pipe_entry_flag;
             u32 pipe_exit_flag;
         } splice;
+
+        struct {
+            int socket;
+            void* addr;
+            u32 addr_len;
+        } bind;
     };
 };
 

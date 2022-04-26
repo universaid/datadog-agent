@@ -34,6 +34,8 @@ func (ev *Event) ResolveFields() {
 	// resolve event specific fields
 	switch ev.GetEventType().String() {
 
+	case "bind":
+
 	case "bpf":
 		_ = ev.ResolveHelpers(&ev.BPF.Program)
 
