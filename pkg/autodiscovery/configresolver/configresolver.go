@@ -306,6 +306,11 @@ func resolveDataWithTemplateVars(ctx context.Context, data integration.Data, svc
 
 var ipv6Re = regexp.MustCompile(`^[0-9a-f:]+$`)
 
+// resolveStringWithTemplateVars takes a string as input and replaces all the `‰var_param‰` patterns by the value returned by the appropriate variable getter.
+// It delegates all the work to resolveStringWithAdHocTemplateVars and implements only the following trick:
+// for `‰host‰` patterns, if the value of the variable is an IPv6 *and* it appears in an URL context, then it is surrounded by square brackets.
+// Indeed, IPv6 needs to be surrounded by square brackets inside URL to distinguish the colons of the IPv6 itself from the one separating the IP from the port
+// like in: http://[::1]:80/
 func resolveStringWithTemplateVars(ctx context.Context, in string, svc listeners.Service) (out interface{}, err error) {
 	isThereAnIPv6Host := false
 
@@ -318,9 +323,8 @@ func resolveStringWithTemplateVars(ctx context.Context, in string, svc listeners
 					isThereAnIPv6Host = true
 					if tplVar != "" {
 						return fmt.Sprintf("‰host_%s‰", tplVar), nil
-					} else {
-						return "‰host‰", nil
 					}
+					return "‰host‰", nil
 				}
 				return host, err
 			}
@@ -381,6 +385,9 @@ func resolveStringWithTemplateVars(ctx context.Context, in string, svc listeners
 
 var varPattern = regexp.MustCompile(`‰(.+?)(?:_(.+?))?‰`)
 
+// resolveStringWithAdHocTemplateVars takes a string as input and replaces all the `‰var_param‰` patterns by the value returned by the appropriate variable getter.
+// The variable getters are passed as last parameter.
+// If the input string is composed of *only* a `‰var_param‰` pattern and the result of the substitution is a boolean or a number, then the function returns a boolean or a number instead of a string.
 func resolveStringWithAdHocTemplateVars(ctx context.Context, in string, svc listeners.Service, templateVariables map[string]variableGetter) (out interface{}, err error) {
 	varIndexes := varPattern.FindAllStringSubmatchIndex(in, -1)
 
