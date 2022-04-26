@@ -248,9 +248,9 @@ func TestExtraConfigExtraTags(t *testing.T) {
 		config:       snmpConfig,
 	}
 
-	info, err := svc.GetExtraConfig([]byte("tags"))
+	info, err := svc.GetExtraConfig("tags")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "tag1:val_1_2,tag2:val_2", string(info))
+	assert.Equal(t, "tag1:val_1_2,tag2:val_2", info)
 }
 
 func TestExtraConfigv3(t *testing.T) {
@@ -271,27 +271,27 @@ func TestExtraConfigv3(t *testing.T) {
 		config:       snmpConfig,
 	}
 
-	info, err := svc.GetExtraConfig([]byte("user"))
+	info, err := svc.GetExtraConfig("user")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "admin", string(info))
+	assert.Equal(t, "admin", info)
 
-	info, err = svc.GetExtraConfig([]byte("auth_key"))
+	info, err = svc.GetExtraConfig("auth_key")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "secret", string(info))
+	assert.Equal(t, "secret", info)
 
-	info, err = svc.GetExtraConfig([]byte("auth_protocol"))
+	info, err = svc.GetExtraConfig("auth_protocol")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "SHA", string(info))
+	assert.Equal(t, "SHA", info)
 
-	info, err = svc.GetExtraConfig([]byte("priv_key"))
+	info, err = svc.GetExtraConfig("priv_key")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "private", string(info))
+	assert.Equal(t, "private", info)
 
-	info, err = svc.GetExtraConfig([]byte("priv_protocol"))
+	info, err = svc.GetExtraConfig("priv_protocol")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "DES", string(info))
+	assert.Equal(t, "DES", info)
 
-	info, err = svc.GetExtraConfig([]byte("loader"))
+	info, err = svc.GetExtraConfig("loader")
 	assert.Equal(t, nil, err)
-	assert.Equal(t, "core", string(info))
+	assert.Equal(t, "core", info)
 }

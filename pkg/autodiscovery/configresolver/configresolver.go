@@ -186,7 +186,6 @@ const (
 	dataInit dataType = iota
 	dataInstance
 	dataLogs
-	dataMetric
 )
 
 type dataToResolve struct {
