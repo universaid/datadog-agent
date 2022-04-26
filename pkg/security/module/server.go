@@ -503,7 +503,7 @@ func (a *APIServer) Apply(ruleIDs []rules.RuleID) {
 
 // SendProcessEvent forwards collected process events to the processMsgs channel so they can be consumed next time GetProcessEvents
 // is called
-func (a *APIServer) SendProcessEvent(event *sprobe.Event) {
+func (a *APIServer) SendProcessEvent(event *ProcessEvent) {
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
 		seclog.Errorf("Failed to marshal Process Lifecycle Event: %v", err)

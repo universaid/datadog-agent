@@ -10,37 +10,34 @@ package events
 
 import "time"
 
-// Event holds metadata about an event sent by system-probe
-type Event struct {
-	Name     string `json:"name"`
-	Category string `json:"category"`
-	Outcome  string `json:"outcome"`
+// ProcessEvent represents a process event collected by system-probe
+type ProcessEvent struct {
+	*Process
+	EventType string    `json:"EventType"`
+	Date      time.Time `json:"date"`
 }
 
-// Executable holds information about the binary executed by a process
-type Executable struct {
-	Path string `json:"path"`
-	Name string `json:"name"`
+// FileEvent holds information about the binary executed by a process
+type FileEvent struct {
+	PathName string `json:"PathnameStr"`
+}
+
+// ArgsEntry holds information about a process command-line arguments
+type ArgsEntry struct {
+	Values []string `json:"Values"`
 }
 
 // Process holds metadata about a process
 type Process struct {
-	PID        int32      `json:"pid"`
-	PPID       int32      `json:"ppid"`
-	UID        int32      `json:"uid"`
-	GID        int32      `json:"gid"`
-	User       string     `json:"user"`
-	Group      string     `json:"group"`
-	ForkTime   time.Time  `json:"fork_time"`
-	ExecTime   time.Time  `json:"exec_time"`
-	Executable Executable `json:"executable"`
-	Argv0      string     `json:"argv0"`
-	Args       []string   `json:"args"`
-}
-
-// ProcessEvent represents a process event collected by system-probe
-type ProcessEvent struct {
-	Event   Event     `json:"evt"`
-	Process Process   `json:"process"`
-	Date    time.Time `json:"date"`
+	PID       int32     `json:"Pid"`
+	PPID      int32     `json:"PPid"`
+	UID       int32     `json:"UID"`
+	GID       int32     `json:"GID"`
+	User      string    `json:"User"`
+	Group     string    `json:"Group"`
+	FileEvent FileEvent `json:"FileEvent"`
+	ArgsEntry ArgsEntry `json:"ArgsEntry"`
+	ForkTime  time.Time `json:"ForkTime"`
+	ExecTime  time.Time `json:"ExecTime"`
+	ExitTime  time.Time `json:"ExitTime"`
 }
