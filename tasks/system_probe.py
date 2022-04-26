@@ -684,11 +684,12 @@ def build_object_files(ctx, parallel_build):
         ctx.sudo(f"mkdir -p {bpf_dir}")
         ctx.sudo(f"cp -R {src_files} {bpf_dir}")
         ctx.sudo(f"chown root:root -R {bpf_dir}")
+        ctx.sudo(f"chmod -R 0644 {bpf_dir}")
     else:
         ctx.run(f"mkdir -p {bpf_dir}")
         ctx.run(f"cp -R {src_files} {bpf_dir}")
         ctx.run(f"chown root:root -R {bpf_dir}")
-
+        ctx.run(f"chmod -R 0644 {bpf_dir}")
 
 @task
 def generate_runtime_files(ctx):
